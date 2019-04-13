@@ -26,7 +26,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ErrorHandler;
+import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
 import org.eclipse.jetty.servlet.ServletHandler;
 
 public class HelloWorld
@@ -43,6 +47,7 @@ public class HelloWorld
         // that is backed by an instance of a Servlet.
         // This handler then needs to be registered with the Server object.
         ServletHandler handler = new ServletHandler();
+
         server.setHandler(handler);
 
         // Passing in the class for the Servlet allows jetty to instantiate an
@@ -51,7 +56,7 @@ public class HelloWorld
         // IMPORTANT:
         // This is a raw Servlet, not a Servlet that has been configured
         // through a web.xml @WebServlet annotation, or anything similar.
-        handler.addServletWithMapping(HelloServlet.class, "/*");
+        handler.addServletWithMapping(HelloServlet.class, "/hello");
 
         // Start things up!
         server.start();
@@ -66,14 +71,26 @@ public class HelloWorld
     @SuppressWarnings("serial")
     public static class HelloServlet extends HttpServlet
     {
+        private final ObjectMapper objectMapper = new ObjectMapper();
+
         @Override
         protected void doGet( HttpServletRequest request,
                               HttpServletResponse response ) throws ServletException,
                                                             IOException
         {
-            response.setContentType("text/html");
+            response.setContentType("application/json");
             response.setStatus(HttpServletResponse.SC_OK);
-            response.getWriter().println("<h1>Hello from HelloServlet</h1>");
+            objectMapper.writeValue(response.getWriter(), new ResultObject("hi", "there"));
+        }
+    }
+
+    private static class ResultObject {
+        public String name;
+        public String address;
+
+        public ResultObject(String name, String address) {
+            this.name = name;
+            this.address = address;
         }
     }
 }
